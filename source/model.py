@@ -91,10 +91,6 @@ def train_model(model: str,
     else:
         cuda_device = -1
 
-    if mistakes_rate > 0:
-        train_dataset = None
-        validation_dataset =
-
     trainer = Trainer(
         model=lang_model,
         optimizer=optimizer,
