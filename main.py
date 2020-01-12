@@ -4,6 +4,8 @@ from source.model import *
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--model', default='transformer', type=str, choices=['lstm', 'transformer'],
+                        help='Model to train (lstm or transformer)')
     parser.add_argument('--data-path', default='./data/', type=str, dest='data_path',
                         help="Path to the directory containing the dataset")
     parser.add_argument('--model-path', default='./models/', type=str, dest='model_path',
@@ -22,10 +24,6 @@ if __name__ == '__main__':
                         help="Dimension of the hidden layer of LSTM model")
     parser.add_argument('--dropout', default=0.1, type=float,
                         help='Dropout rate')
-    parser.add_argument('--mistakes-rate', default=0., type=float, dest='mistakes_rate',
-                        help='Rate of mistakes in validation dataset')
-    parser.add_argument('--model', default='transformer', type=str, choices=['lstm', 'transformer'],
-                        help='Model to train (lstm or transformer)')
 
     namespace = parser.parse_args()
 
@@ -37,12 +35,11 @@ if __name__ == '__main__':
         dropout=namespace.dropout,
         patience=3
     )
-
     train_model(model=namespace.model,
                 data_path=namespace.data_path,
                 model_path=namespace.model_path,
                 config=config,
                 seed=namespace.seed,
-                subwords=False)
-
+                subwords=namespace.subwords,
+   )
 

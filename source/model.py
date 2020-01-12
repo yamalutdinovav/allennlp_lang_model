@@ -12,6 +12,7 @@ from allennlp.data.tokenizers import WordTokenizer
 from allennlp.models import LanguageModel
 from allennlp.modules.token_embedders import Embedding
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
+from allennlp.training.metrics.perplexity import Perplexity
 
 from source.preprocessing import MessageDataPreprocessor
 from source.reader import MessageDatasetReader
@@ -29,12 +30,13 @@ def train_model(model: str,
                 config: Config,
                 seed: int,
                 subwords: bool = False,
-                mistakes_rate: float = 0):
+                mistakes_rate: float = 0.1,
+                count_perplexity_only: bool = False):
 
     train_path = os.path.normpath(data_path + '/train_data.csv')
     test_path = os.path.normpath(data_path + '/test_data.csv')
-    spoiled_path = os.path.normpath(data_path + '/train_data_spoiled.csv')
-    vocab_path = os.path.normpath(model_path + "/vocab")
+    spoiled_path = os.path.normpath(data_path + '/test_data_spoiled.csv')
+    vocab_path = os.path.normpath(model_path + '/vocab')
 
     torch.manual_seed(seed)
 
@@ -42,16 +44,16 @@ def train_model(model: str,
     if not os.path.exists(os.path.normpath(data_path + '/train_data.csv')) or bpe_train_needed:
         preprocessor = MessageDataPreprocessor(data_path, subwords=subwords, bpe_path=model_path)
         preprocessor.split()
-    if mistakes_rate > 0 and not os.path.exists(spoiled_path):
+    if count_perplexity_only and not os.path.exists(spoiled_path):
         preprocessor = MessageDataPreprocessor(data_path)
         preprocessor.add_mistakes(mistakes_rate)
-
 
     reader = MessageDatasetReader(tokenizer=WordTokenizer(), subwords=subwords,
                                   bpe_path=os.path.normpath(model_path + '/bpe.model'))
 
     train_dataset = reader.read(cached_path(train_path))
     validation_dataset = reader.read(cached_path(test_path))
+
     if not os.path.exists(vocab_path):
         vocab = Vocabulary.from_instances(chain(train_dataset, validation_dataset))
         vocab.save_to_files(vocab_path)
@@ -103,3 +105,5 @@ def train_model(model: str,
         cuda_device=cuda_device,
     )
     trainer.train()
+
+
